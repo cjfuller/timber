@@ -1,0 +1,4 @@
+neovim
+ipython
+flake8
+jedi

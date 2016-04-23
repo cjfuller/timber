@@ -10,11 +10,16 @@ Requires python 3.5 (it makes use of async/await-based coroutines)
 
 # Usage
 
-`timber --config account=<your google account> project=<google cloud project id>`
+```sh
+timber --config account=<your google account> project=<google cloud project id>
+```
 (This will put these options into `~/.timberrc` so that you only have to do
 this the first time, unless you want to switch projects or accounts.)
 
-`timber`
+On subsequent uses, you can just run:
+```
+timber
+```
 
 # Keyboard commands
 | Key     |  Action                                                                 |

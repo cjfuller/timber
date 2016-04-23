@@ -10,5 +10,10 @@ setup(
     author_email='colin@khanacademy.org',
     url='',
     packages=['timber'],
-    scripts=['bin/timber']
+    scripts=['bin/timber'],
+    install_requires=[
+        'blessed>=1.14.0,<1.15.0',
+        'aiohttp==0.21.5',
+        'funcy>=1.7.0,<1.8.0',
+    ]
 )

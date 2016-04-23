@@ -13,8 +13,8 @@ Requires python 3.5 (it makes use of async/await-based coroutines)
 ```sh
 timber --config account=<your google account> project=<google cloud project id>
 ```
-(This will put these options into `~/.timberrc` so that you only have to do
-this the first time, unless you want to switch projects or accounts.)
+This will save these options into `~/.timberrc` so that you only have to do
+this the first time, unless you want to switch projects or accounts.
 
 On subsequent uses, you can just run:
 ```

@@ -3,9 +3,10 @@ import datetime
 import json
 import os.path
 import subprocess
+import time
 
 import aiohttp
-import requests
+from funcy import get_in
 
 PROJECT_ID = 'khan-academy'
 LOGS_URL = (
@@ -27,6 +28,34 @@ def get_auth_token() -> str:
                 return cred['credential']['access_token']
 
 
+# log_entry is an entry as defined at
+# https://cloud.google.com/logging/docs/api/ref_v2beta1/rest/v2beta1/LogEntry
+def extract_log_data(entry):
+    ts = get_in(entry, ['metadata', 'timestamp'], None)
+    if ts:
+        # Convert to local time
+        utc_offset_s = time.timezone
+        dst_offset_s = 3600 if time.localtime().tm_isdst else 0
+        total_offset = utc_offset_s - dst_offset_s
+        ts = (
+            datetime.datetime.strptime(ts, '%Y-%m-%dT%H:%M:%S.%fZ') -
+            datetime.timedelta(seconds=total_offset))
+    return {
+        'ip': get_in(entry, ['protoPayload', 'versionId'], None),
+        'latency': get_in(entry, ['protoPayload', 'latency'], None),
+        'messages': get_in(entry, ['protoPayload', 'line'], []),
+        'method': get_in(entry, ['protoPayload', 'method'], None),
+        'module': get_in(entry, ['protoPayload', 'moduleId']) or 'default',
+        'requestId': get_in(entry, ['protoPayload', 'requestId'], None),
+        'resource': get_in(entry, ['protoPayload', 'resource'], None),
+        'severity': get_in(entry, ['metadata', 'severity'], 'DEBUG'),
+        'status': str(get_in(entry, ['httpRequest', 'status'], '---')),
+        'timestamp': ts,
+        'user_agent': get_in(entry, ['protoPayload', 'userAgent'], None),
+        'version': get_in(entry, ['protoPayload', 'versionId'], None),
+    }
+
+
 async def fetch_latest_logs():
     ts = datetime.datetime.utcnow().isoformat()
     ts = ts[:-3] + 'Z'
@@ -35,17 +64,24 @@ async def fetch_latest_logs():
         'log="appengine.googleapis.com/request_log" '
         'metadata.severity>=ERROR '
         'metadata.timestamp<="%s"' % ts)
-    resp = requests.post(
+    req = aiohttp.post(
         LOGS_URL,
-        data={
+        data=json.dumps({
             'orderBy': 'metadata.timestamp desc',
             'pageSize': 100,
             'filter': log_filter
-        },
+        }),
         headers={'Authorization': 'Bearer %s' % get_auth_token()})
-    if resp.status_code in (401, 403):
-        subprocess.check_call(['gcloud', 'auth', 'login', USER],
-                              stdout=subprocess.DEVNULL,
-                              stderr=subprocess.DEVNULL)
-        return fetch_latest_logs()
-    return resp.json().get('entries', [])
+    async with req as resp:
+        if resp.status in (401, 403):
+            proc = await asyncio.create_subprocess_exec(
+                'gcloud', 'auth', 'login', USER,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL)
+            exitstatus = await proc.wait()
+            if exitstatus != 0:
+                raise subprocess.CalledProcessError(
+                    "gcloud exited with status %s" % exitstatus)
+            return await fetch_latest_logs()
+        return list(map(
+            extract_log_data, (await resp.json()).get('entries', [])))

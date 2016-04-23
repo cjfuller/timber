@@ -4,19 +4,32 @@ import json
 import os.path
 import subprocess
 import time
+import types
 
 import aiohttp
 from funcy import get_in
 
-PROJECT_ID = 'khan-academy'
-LOGS_URL = (
-    'https://logging.googleapis.com/v1beta3/projects/%s/entries:list'
-    % PROJECT_ID)
-USER = 'colin@khanacademy.org'
+LOGS_URL_TEMPLATE = (
+    'https://logging.googleapis.com/v1beta3/projects/%s/entries:list')
+
+_config = types.SimpleNamespace()
 
 
-def get_auth_user() -> str:
-    return USER
+def set_config(newconfig: types.SimpleNamespace) -> None:
+    global _config
+    _config = newconfig
+
+
+def config() -> types.SimpleNamespace:
+    return _config
+
+
+def logs_url() -> str:
+    return LOGS_URL_TEMPLATE % config().project_id
+
+
+def get_user() -> str:
+    return config().user
 
 
 def get_auth_token() -> str:
@@ -24,7 +37,7 @@ def get_auth_token() -> str:
     with open(credentials_file) as f:
         credentials = json.loads(f.read())
         for cred in credentials['data']:
-            if cred['key']['account'] == get_auth_user():
+            if cred['key']['account'] == get_user():
                 return cred['credential']['access_token']
 
 
@@ -65,7 +78,7 @@ async def fetch_latest_logs():
         'metadata.severity>=ERROR '
         'metadata.timestamp<="%s"' % ts)
     req = aiohttp.post(
-        LOGS_URL,
+        logs_url(),
         data=json.dumps({
             'orderBy': 'metadata.timestamp desc',
             'pageSize': 100,
@@ -75,7 +88,7 @@ async def fetch_latest_logs():
     async with req as resp:
         if resp.status in (401, 403):
             proc = await asyncio.create_subprocess_exec(
-                'gcloud', 'auth', 'login', USER,
+                'gcloud', 'auth', 'login', get_user(),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL)
             exitstatus = await proc.wait()

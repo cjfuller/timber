@@ -1,18 +1,69 @@
 #!/usr/bin/env python3.5
-
-import json
+import argparse
+import os.path
+import types
 
 import blessed
 
-import timber.log_formatter
 import timber.logging_service
 import timber.ui
 
 
+RC_PATH = os.path.expanduser('~/.timberrc')
+
 t = blessed.Terminal()
 
-if __name__ == '__main__':
+ALL_OPTS = [
+    'user',
+    'project_id',
+]
+
+REQUIRED_OPTS = ALL_OPTS
+
+
+def read_rc():
+    if not os.path.exists(RC_PATH):
+        return types.SimpleNamespace()
+    with open(RC_PATH) as f:
+        opts = [tuple(line.strip().split('=')) for line in f]
+        return types.SimpleNamespace(**dict(opts))
+
+
+def write_rc(opts):
+    with open(RC_PATH, 'w') as f:
+        for opt in ALL_OPTS:
+            value = getattr(opts, opt, None)
+            if value:
+                f.write('='.join([opt, value]) + '\n')
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Command-line appengine log viewer')
+    parser.add_argument('--config', metavar='opts', nargs='+')
+    cmdline_args = parser.parse_args()
+    existing_opts = read_rc()
+    if cmdline_args.config:
+        all_opts = types.SimpleNamespace(
+            **dict([tuple(opt.split('=')) for opt in cmdline_args.config]))
+
+        for opt in ALL_OPTS:
+            if not getattr(all_opts, opt, None):
+                setattr(all_opts, opt, getattr(existing_opts, opt, None))
+
+        write_rc(all_opts)
+    else:
+        all_opts = existing_opts
+
+    if any(getattr(all_opts, opt, None) is None for opt in REQUIRED_OPTS):
+        print('Error: must provide all required config options: %s' %
+              ', '.join(REQUIRED_OPTS))
+        return
+
+    timber.logging_service.set_config(all_opts)
+
     timber.ui.ui_event_loop(t, None, None)
-    # logs = timber.logging_service.fetch_latest_logs()
-    # for log in logs.get('entries', []):
-    #     print(timber.log_formatter.format(log))
+
+
+if __name__ == '__main__':
+    main()

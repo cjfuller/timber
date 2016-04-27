@@ -30,5 +30,11 @@ timber
 | <       | from the log detail view, go back to the list of logs                   |
 | q       | [q]uit the current view (detail -> logs list; logs list -> exit)        |
 | Ctrl-c  | exit (gracefully)                                                       |
+| :       | enter command mode with a vim-style command line                        |
 
+# Command mode
+`:set level=<LEVEL>` where `<LEVEL>` is in `(DEBUG, INFO, WARNING, ERROR, CRITICAL)`:
+set the log level to the specified level and re-fetch logs
+
+(Note that unrecognized commands are currently ignored.)
 

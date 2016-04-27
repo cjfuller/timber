@@ -24,6 +24,11 @@ def config() -> types.SimpleNamespace:
     return _config
 
 
+def update_config(key, str, value: str) -> types.SimpleNamespace:
+    setattr(_config, key, value)
+    return _config
+
+
 def logs_url() -> str:
     return LOGS_URL_TEMPLATE % config().project_id
 
@@ -72,10 +77,14 @@ def extract_log_data(entry):
 async def fetch_latest_logs():
     ts = datetime.datetime.utcnow().isoformat()
     ts = ts[:-3] + 'Z'
+    severity_string = ''
+    log_level = config().log_level
+    if log_level:
+        severity_string = 'metadata.severity>=%s ' % log_level
     log_filter = (
-        'metadata.serviceName="appengine.googleapis.com" '
-        'log="appengine.googleapis.com/request_log" '
-        'metadata.severity>=ERROR '
+        'metadata.serviceName="appengine.googleapis.com" ' +
+        'log="appengine.googleapis.com/request_log" ' +
+        severity_string +
         'metadata.timestamp<="%s"' % ts)
     req = aiohttp.post(
         logs_url(),

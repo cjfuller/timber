@@ -59,11 +59,21 @@ def render_status_line(term, status):
     echo(term.black_on_yellow(status))
 
 
+def _render_command_line(term, state):
+    if state.get('command_buffer', None) is None:
+        return
+
+    echo(term.move(term.height - 1, 0))
+    echo(':')
+    echo(state['command_buffer'])
+
+
 def _render_shared(state):
     term = state['term']
     echo(term.clear)
     echo(term.move(0, 0))
     render_status_line(term, state.get('status', ''))
+    _render_command_line(term, state)
 
 
 def _render_logs(state):
@@ -72,7 +82,7 @@ def _render_logs(state):
     y = get_in(state, ['cursor', 'y'], 0)
     # TODO: need to account for sort direction eventually
     for row_index, log in enumerate(
-            funcy.take(term.height, state.get('logs', []))):
+            funcy.take(term.height - 2, state.get('logs', []))):
         echo(term.move(row_index + 1, 0))
         logline = format(term, log)
         echo(logline)

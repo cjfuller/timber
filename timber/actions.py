@@ -19,6 +19,12 @@ MOVE_CURSOR = ActionType('MOVE_CURSOR')
 LOADING = ActionType('LOADING')
 RENDER = ActionType('RENDER')
 VIEW = ActionType('VIEW')
+LOG_LEVEL = ActionType('LOG_LEVEL')
+SET_INPUT_MODE = ActionType('SET_INPUT_MODE')
+COMMAND_APPEND = ActionType('COMMAND_APPEND')
+COMMAND_BACKSPACE = ActionType('COMMAND_BACKSPACE')
+COMMAND_CLEAR = ActionType('COMMAND_CLEAR')
+COMMAND_RUN = ActionType('COMMAND_RUN')
 
 
 def store_logs(logs):
@@ -66,4 +72,40 @@ def set_view(viewname):
     return {
         'type': VIEW,
         'view': viewname,
+    }
+
+
+def set_log_level(level):
+    return {
+        'type': LOG_LEVEL,
+        'level': level,
+    }
+
+
+def set_input_mode(mode):
+    return {
+        'type': SET_INPUT_MODE,
+        'mode': mode,
+    }
+
+
+def append_to_command(partial_command):
+    return {
+        'type': COMMAND_APPEND,
+        'text': partial_command,
+    }
+
+
+def backspace_command():
+    return {'type': COMMAND_BACKSPACE}
+
+
+def clear_command():
+    return {'type': COMMAND_CLEAR}
+
+
+def process_command(command):
+    return {
+        'type': COMMAND_RUN,
+        'command': command,
     }

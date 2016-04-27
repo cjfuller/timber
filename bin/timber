@@ -16,9 +16,17 @@ t = blessed.Terminal()
 ALL_OPTS = [
     'user',
     'project_id',
+    'log_level',
 ]
 
-REQUIRED_OPTS = ALL_OPTS
+REQUIRED_OPTS = [
+    'user',
+    'project_id'
+]
+
+DEFAULTS = {
+    'log_level': 'ERROR',
+}
 
 
 def read_rc():
@@ -59,6 +67,10 @@ def main():
         print('Error: must provide all required config options: %s' %
               ', '.join(REQUIRED_OPTS))
         return
+
+    for opt, default in DEFAULTS.items():
+        if getattr(all_opts, opt, None) is None:
+            setattr(all_opts, opt, default)
 
     timber.logging_service.set_config(all_opts)
 

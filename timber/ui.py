@@ -5,7 +5,7 @@ import re
 from funcy import get_in, set_in, update_in
 
 from timber import actions
-from timber import log_formatter
+from timber import views
 from timber import logging_service
 
 
@@ -64,7 +64,7 @@ def clear_status(state):
 
 
 def do_render(state, action):
-    log_formatter.render_from_state(state)
+    views.render_from_state(state)
     return state
 
 

@@ -76,6 +76,11 @@ def set_log_level(state, action):
     return set_in(state, ['log_service_config', 'log_level'], action['level'])
 
 
+def set_resource_filter(state, action):
+    return set_in(state, ['log_service_config', 'resource'],
+                  action['resource'])
+
+
 def set_input_mode(state, action):
     return set_in(state, ['input_mode'], action['mode'])
 
@@ -97,14 +102,32 @@ def clear_command(state, action):
 
 def run_command(state, action):
     command = action['command']
+    # TODO: depending on how many commands get added, consider writing a proper
+    # parser.
     log_re_match = re.match(
         r'set level=(ALL|DEBUG|INFO|WARNING|ERROR|CRITICAL)',
         command)
+    resource_re_match = re.match(
+        r'set resource=([^\s]+)', command)
+    unset_resource_re_match = re.match(
+        r'unset resource', command)
+
     if log_re_match:
         level = log_re_match.group(1)
         newstate = set_log_level(state, actions.set_log_level(level))
         # TODO: move to the action itself?  Probably shouldn't have
         # side-effects here.
+        loop.create_task(refetch_logs())
+        return newstate
+    elif resource_re_match:
+        resource = resource_re_match.group(1)
+        newstate = set_resource_filter(
+            state, actions.set_resource_filter(resource))
+        loop.create_task(refetch_logs())
+        return newstate
+    elif unset_resource_re_match:
+        newstate = set_resource_filter(
+            state, actions.set_resource_filter(None))
         loop.create_task(refetch_logs())
         return newstate
     else:
@@ -124,6 +147,7 @@ reducers[actions.COMMAND_APPEND] = append_to_command
 reducers[actions.COMMAND_BACKSPACE] = backspace_command
 reducers[actions.COMMAND_CLEAR] = clear_command
 reducers[actions.COMMAND_RUN] = run_command
+reducers[actions.SET_RESOURCE_FILTER] = set_resource_filter
 
 
 def process_action(action):

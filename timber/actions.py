@@ -25,6 +25,7 @@ COMMAND_APPEND = ActionType('COMMAND_APPEND')
 COMMAND_BACKSPACE = ActionType('COMMAND_BACKSPACE')
 COMMAND_CLEAR = ActionType('COMMAND_CLEAR')
 COMMAND_RUN = ActionType('COMMAND_RUN')
+SET_RESOURCE_FILTER = ActionType('SET_RESOURCE_FILTER')
 
 
 def store_logs(logs):
@@ -108,4 +109,11 @@ def process_command(command):
     return {
         'type': COMMAND_RUN,
         'command': command,
+    }
+
+
+def set_resource_filter(resource):
+    return {
+        'type': SET_RESOURCE_FILTER,
+        'resource': resource,
     }

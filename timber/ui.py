@@ -64,7 +64,7 @@ def clear_status(state):
 
 
 def do_render(state, action):
-    views.render_from_state(state)
+    views.render_from_state(state, last_state=None)
     return state
 
 
@@ -96,8 +96,6 @@ def clear_command(state, action):
 
 
 def run_command(state, action):
-    # TODO: move to the action itself?  Probably shouldn't have side-effects
-    # here.
     command = action['command']
     log_re_match = re.match(
         r'set level=(ALL|DEBUG|INFO|WARNING|ERROR|CRITICAL)',
@@ -105,6 +103,8 @@ def run_command(state, action):
     if log_re_match:
         level = log_re_match.group(1)
         newstate = set_log_level(state, actions.set_log_level(level))
+        # TODO: move to the action itself?  Probably shouldn't have
+        # side-effects here.
         loop.create_task(refetch_logs())
         return newstate
     else:
@@ -128,10 +128,12 @@ reducers[actions.COMMAND_RUN] = run_command
 
 def process_action(action):
     global _store_state
+    last_state = _store_state
     if action['type'] in reducers:
         _store_state = reducers[action['type']](_store_state, action)
     else:
         raise TypeError("Unknown action type: %s" % action['type'])
+    return (last_state, _store_state)
 
 
 async def drain_action_queue():
@@ -140,18 +142,20 @@ async def drain_action_queue():
         action = await(item)
     else:
         action = item
-    process_action(action)
+    last_state, state = process_action(action)
     _action_queue.task_done()
+    views.render_from_state(state, last_state=last_state)
     if not _get_state().get('shutdown'):
         loop.create_task(drain_action_queue())
 
 
 async def dispatch(action):
     await _action_queue.put(action)
-    await _action_queue.put(actions.render())
 
 
 async def read_key(term):
+    # TODO: (monkey-)patch blessed so that we can actually use asyncio for
+    # reading characters instead of this timeout silliness.
     with term.cbreak():
         return term.inkey(timeout=0.01)
 

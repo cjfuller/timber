@@ -60,29 +60,46 @@ def render_status_line(term, status):
 
 
 def _render_command_line(term, state):
+    echo(term.move(term.height - 1, 0))
+    echo(term.clear_eol)
+
     if state.get('command_buffer', None) is None:
         return
 
-    echo(term.move(term.height - 1, 0))
     echo(':')
     echo(state['command_buffer'])
 
 
-def _render_shared(state):
+def _render_shared(state, last_state):
+    skip_full_redraw = (
+        # TODO: instead of checking specific things, just check everything but
+        # the command line and status line.
+        last_state is not None and
+        # Since we're keeping state immutable, we can just to cheap object
+        # identity checks.
+        state.get('logs') is last_state.get('logs') and
+        state.get('cursor') is last_state.get('cursor') and
+        state.get('view') is last_state.get('view')
+    )
     term = state['term']
-    echo(term.clear)
+    if not skip_full_redraw:
+        echo(term.clear)
     echo(term.move(0, 0))
+    echo(term.clear_eol)
     render_status_line(term, state.get('status', ''))
     _render_command_line(term, state)
+    return not skip_full_redraw
 
 
-def _render_logs(state):
+def _render_logs(state, last_state):
     term = state['term']
-    _render_shared(state)
+    continue_rendering = _render_shared(state, last_state)
+    if not continue_rendering:
+        return
     y = get_in(state, ['cursor', 'y'], 0)
+    logs = funcy.take(term.height - 2, state.get('logs', []))
     # TODO: need to account for sort direction eventually
-    for row_index, log in enumerate(
-            funcy.take(term.height - 2, state.get('logs', []))):
+    for row_index, log in enumerate(logs):
         echo(term.move(row_index + 1, 0))
         logline = format(term, log)
         echo(logline)
@@ -106,11 +123,12 @@ def _format_message(term, message):
         echo(term.move_x(0))
 
 
-def _render_expanded_view(state):
-    _render_shared(state)
+def _render_expanded_view(state, last_state):
+    _render_shared(state, last_state)
     term = state['term']
     y = get_in(state, ['cursor', 'y'], 0)
     log_entry = state['logs'][y]
+    echo(term.move(1, 0))
     echo('Detail for: ' + format(term, log_entry))
     echo(term.move_down())
     echo(term.move_down())
@@ -125,11 +143,11 @@ views = {
 }
 
 
-def render_from_state(state):
+def render_from_state(state, last_state=None):
     term = state.get('term')
     if term is None:
         return
 
     view = views[state.get('view', 'logs')]
     with term.raw(), term.hidden_cursor(), term.location(), term.keypad():
-        view(state)
+        view(state, last_state)

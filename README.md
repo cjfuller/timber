@@ -36,5 +36,9 @@ timber
 `:set level=<LEVEL>` where `<LEVEL>` is in `(DEBUG, INFO, WARNING, ERROR, CRITICAL)`:
 set the log level to the specified level and re-fetch logs
 
+`:set resource=<rel URL>` will search for logs only matching the specified route (or partial route)
+`:unset resource` clears a previously added resource filter
+
+
 (Note that unrecognized commands are currently ignored.)
 

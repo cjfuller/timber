@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name='timber',
-    version='0.2.0',
+    version='0.3.0',
     description='Command line viewer for Google cloud logging',
     author='Colin Fuller',
     author_email='colin@khanacademy.org',

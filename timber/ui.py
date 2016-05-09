@@ -81,6 +81,11 @@ def set_resource_filter(state, action):
                   action['resource'])
 
 
+def set_version_filter(state, action):
+    return set_in(state, ['log_service_config', 'version'],
+                  action['version'])
+
+
 def set_input_mode(state, action):
     return set_in(state, ['input_mode'], action['mode'])
 
@@ -111,6 +116,10 @@ def run_command(state, action):
         r'set resource=([^\s]+)', command)
     unset_resource_re_match = re.match(
         r'unset resource', command)
+    version_re_match = re.match(
+        r'set version=([^\s]+)', command)
+    unset_version_re_match = re.match(
+        r'unset version', command)
 
     if log_re_match:
         level = log_re_match.group(1)
@@ -128,6 +137,17 @@ def run_command(state, action):
     elif unset_resource_re_match:
         newstate = set_resource_filter(
             state, actions.set_resource_filter(None))
+        loop.create_task(refetch_logs())
+        return newstate
+    elif version_re_match:
+        version = version_re_match.group(1)
+        newstate = set_version_filter(
+            state, actions.set_version_filter(version))
+        loop.create_task(refetch_logs())
+        return newstate
+    elif unset_version_re_match:
+        newstate = set_version_filter(
+            state, actions.set_version_filter(None))
         loop.create_task(refetch_logs())
         return newstate
     else:

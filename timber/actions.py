@@ -26,6 +26,7 @@ COMMAND_BACKSPACE = ActionType('COMMAND_BACKSPACE')
 COMMAND_CLEAR = ActionType('COMMAND_CLEAR')
 COMMAND_RUN = ActionType('COMMAND_RUN')
 SET_RESOURCE_FILTER = ActionType('SET_RESOURCE_FILTER')
+SET_VERSION_FILTER = ActionType('SET_VERSION_FILTER')
 
 
 def store_logs(logs):
@@ -116,4 +117,11 @@ def set_resource_filter(resource):
     return {
         'type': SET_RESOURCE_FILTER,
         'resource': resource,
+    }
+
+
+def set_version_filter(version):
+    return {
+        'type': SET_VERSION_FILTER,
+        'version': version,
     }

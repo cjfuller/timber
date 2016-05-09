@@ -86,9 +86,17 @@ async def fetch_latest_logs():
         'log="appengine.googleapis.com/request_log" ' +
         severity_string +
         'metadata.timestamp<="%s"' % ts)
+
     resource = getattr(config(), 'resource', None)
     if resource:
-        log_filter += ' protoPayload.resource:%s' % resource
+        log_filter += ' protoPayload.resource:"%s"' % resource
+
+    version = getattr(config(), 'version', None)
+    if version:
+        log_filter += (
+            ' metadata.labels."appengine.googleapis.com/version_id"="%s"' % (
+                version))
+
     req = aiohttp.post(
         logs_url(),
         data=json.dumps({

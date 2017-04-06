@@ -1,0 +1,160 @@
+syntax = "proto2";
+option go_package = "logservice/pb";
+
+package google.appengine.logging.v1;
+
+message Timestamp {
+  optional int64 seconds = 1;
+  optional int32 nanos = 2;
+}
+
+message Latency {
+  optional int64 seconds = 1;
+  optional int32 nanos = 2;
+}
+
+message LogServiceError {
+  enum ErrorCode {
+    OK  = 0;
+    INVALID_REQUEST = 1;
+    STORAGE_ERROR = 2;
+  }
+}
+
+message UserAppLogLine {
+  optional int64 timestamp_usec = 1;
+  optional int64 level = 2;
+  optional string logMessage = 3;
+}
+
+message UserAppLogGroup {
+  repeated UserAppLogLine log_line = 2;
+}
+
+message FlushRequest {
+  optional bytes logs = 1;
+}
+
+message SetStatusRequest {
+  optional string status = 1;
+}
+
+
+message LogOffset {
+  optional bytes request_id = 1;
+}
+
+message LogLine {
+  optional Timestamp time = 1;
+  optional int32 level = 2;
+  optional string logMessage = 3;
+}
+
+message RequestLog {
+  optional string app_id = 1;
+  optional string moduleId = 37 [default="default"];
+  optional string versionId = 2;
+  optional string requestId = 3;
+  optional LogOffset offset = 35;
+  optional string ip = 4;
+  optional string nickname = 5;
+  optional Timestamp startTime = 6;
+  optional Timestamp endTime = 7;
+  optional Latency latency = 8;
+  optional int64 megaCycles = 9;
+  optional string method = 10;
+  optional string resource = 11;
+  optional string httpVersion = 12;
+  optional int32 status = 13;
+  optional int64 responseSize = 14;
+  optional string referrer = 15;
+  optional string userAgent = 16;
+  optional string urlMapEntry = 17;
+  optional string combined = 18;
+  optional int64 apiMcycles = 19;
+  optional string host = 20;
+  optional double cost = 21;
+
+  optional string taskQueueName = 22;
+  optional string taskName = 23;
+
+  optional bool wasLoadingRequest = 24;
+  optional Latency pendingTime = 25;
+  optional int32 replicaIndex = 26 [default = -1];
+  optional bool finished = 27 [default = true];
+  optional string instanceId = 28;
+
+  repeated LogLine line = 29;
+
+  optional bool lines_incomplete = 36;
+  optional bytes app_engine_release = 38;
+
+  optional int32 exit_reason = 30;
+  optional bool was_throttled_for_time = 31;
+  optional bool was_throttled_for_requests = 32;
+  optional int64 throttled_time = 33;
+
+  optional bytes server_name = 34;
+}
+
+message LogModuleVersion {
+  optional string moduleId = 1 [default="default"];
+  optional string versionId = 2;
+}
+
+message LogReadRequest {
+  optional string app_id = 1;
+  repeated string version_id = 2;
+  repeated LogModuleVersion module_version = 19;
+
+  optional int64 start_time = 3;
+  optional int64 end_time = 4;
+  optional LogOffset offset = 5;
+  repeated bytes request_id = 6;
+
+  optional int32 minimum_log_level = 7;
+  optional bool include_incomplete = 8;
+  optional int64 count = 9;
+
+  optional string combined_log_regex = 14;
+  optional string host_regex = 15;
+  optional int32 replica_index = 16;
+
+  optional bool include_app_logs = 10;
+  optional int32 app_logs_per_request = 17;
+  optional bool include_host = 11;
+  optional bool include_all = 12;
+  optional bool cache_iterator = 13;
+  optional int32 num_shards = 18;
+}
+
+message LogReadResponse {
+  repeated RequestLog log = 1;
+  optional LogOffset offset = 2;
+  optional int64 last_end_time = 3;
+}
+
+message LogUsageRecord {
+  optional string version_id = 1;
+  optional int32 start_time = 2;
+  optional int32 end_time = 3;
+  optional int64 count = 4;
+  optional int64 total_size = 5;
+  optional int32 records = 6;
+}
+
+message LogUsageRequest {
+  optional string app_id = 1;
+  repeated string version_id = 2;
+  optional int32 start_time = 3;
+  optional int32 end_time = 4;
+  optional uint32 resolution_hours = 5 [default = 1];
+  optional bool combine_versions = 6;
+  optional int32 usage_version = 7;
+  optional bool versions_only = 8;
+}
+
+message LogUsageResponse {
+  repeated LogUsageRecord usage = 1;
+  optional LogUsageRecord summary = 2;
+}

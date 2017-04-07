@@ -7,6 +7,7 @@
 Grab one of the precompiled binaries:
 
 [OSX](https://storage.googleapis.com/timber-dist/osx/timber)
+
 [linux x86_64](https://storage.googleapis.com/timber-dist/linux-x86_64/timber)
 
 Or build from source:

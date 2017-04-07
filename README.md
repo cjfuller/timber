@@ -12,6 +12,7 @@ Grab one of the precompiled binaries:
 
 Or build from source:
 ```
+go get google.golang.org/grpc
 go get cloud.google.com/go/logging
 go get github.com/gizak/termui
 go build timber.go

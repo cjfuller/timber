@@ -5,12 +5,14 @@ package main
 import (
 	"flag"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/user"
 	"path"
 	"sync"
 
 	tui "github.com/gizak/termui"
+	"google.golang.org/grpc/grpclog"
 
 	"./logservice"
 	"./ui"
@@ -19,6 +21,9 @@ import (
 var configFilename = ".timberrc"
 
 func main() {
+	// grpc spews annoying messages when the http2 connection times out, which
+	// meses up the UI.  This suppresses those messages
+	grpclog.SetLogger(log.New(ioutil.Discard, "", 0))
 	user, userErr := user.Current()
 	if userErr != nil {
 		panic(userErr)

@@ -21,6 +21,13 @@ func LogsWidth() int {
 	return tui.TermWidth()
 }
 
+func trimTo(input string, length int) string {
+	if len(input) > length {
+		return input[:length]
+	}
+	return input
+}
+
 func levelIndicator(level string) string {
 	switch level {
 	case "Default", "Debug":
@@ -179,7 +186,7 @@ func InstallEventHandlers() {
 func formatLog(log logservice.LogEntryMin) []string {
 	return []string{
 		levelIndicator(log.Severity),
-		white(log.Timestamp.String()),
+		white(trimTo(log.Timestamp.String(), 23) + " UTC"),
 		white(log.Version),
 		module(log.Module),
 		colorStatusCode(log.Status),

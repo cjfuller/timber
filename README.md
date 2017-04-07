@@ -4,22 +4,32 @@
 
 # Installation
 
-Requires python 3.5 (it makes use of async/await-based coroutines)
+Grab one of the precompiled binaries:
 
-`pip install timber`
+[OSX](https://storage.googleapis.com/timber-dist/osx/timber)
+[linux x86_64](https://storage.googleapis.com/timber-dist/linux-x86_64/timber)
+
+Or build from source:
+```
+go get cloud.google.com/go/logging
+go get github.com/gizak/termui
+go build timber.go
+```
 
 # Usage
 
-```sh
-timber --config account=<your google account> project=<google cloud project id>
+Timber requires that you have gcloud credentials.
 ```
-This will save these options into `~/.timberrc` so that you only have to do
-this the first time, unless you want to switch projects or accounts.
+gcloud auth login <email>
+```
 
-On subsequent uses, you can just run:
+Set your google cloud project id using a command line flag:
 ```
-timber
+timber -project <my project>
 ```
+
+The last value you supplied for the project id will be stored in `~/.timberrc`,
+so you only need to provide the flag once, or when you want to change projects.
 
 # Keyboard commands
 | Key     |  Action                                                                 |
@@ -27,14 +37,14 @@ timber
 | r       | [r]efresh, fetching the latest logs                                     |
 | k, j    | move up and down through the list of logs                               |
 | >       | from the logs list view, get detailed information for the current log   |
-| <       | from the log detail view, go back to the list of logs                   |
 | q       | [q]uit the current view (detail -> logs list; logs list -> exit)        |
 | Ctrl-c  | exit (gracefully)                                                       |
-| :       | enter command mode with a vim-style command line                        |
+| :       | from the logs list, enter command mode with a vim-style command line    |
 
 # Command mode
+
 `:set level=<LEVEL>` where `<LEVEL>` is in `(DEBUG, INFO, WARNING, ERROR, CRITICAL)`:
-set the log level to the specified level and re-fetch logs
+set the log level to the specified level and re-fetch logs (defaults to ERROR on load or if unrecognized)
 
 `:set resource=<rel URL>` will search for logs only matching the specified route (or partial route)
 `:unset resource` clears a previously added resource filter

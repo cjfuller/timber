@@ -62,7 +62,7 @@ func module(mod string) string {
 	if mod == "" {
 		mod = "default"
 	}
-	return white(mod)
+	return white(trimTo(mod, 7))
 }
 
 func drawStatusLine(str string) {
@@ -186,8 +186,8 @@ func InstallEventHandlers() {
 func formatLog(log logservice.LogEntryMin) []string {
 	return []string{
 		levelIndicator(log.Severity),
-		white(trimTo(log.Timestamp.String(), 23) + " UTC"),
-		white(log.Version),
+		white(trimTo(log.Timestamp.String(), 23) + "Z"),
+		white(trimTo(log.Version, 11)),
 		module(log.Module),
 		colorStatusCode(log.Status),
 		white(log.Method),

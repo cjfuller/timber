@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	_ "image"
 	"sort"
 	"strings"
 )
@@ -75,10 +74,6 @@ func drawStatusLine(str string) {
 }
 
 func drawCommandLine(str string, inCommandMode bool) {
-	// tui.ClearArea(image.Rectangle{
-	// 	Min: image.Point{X: 0, Y: LogsHeight() + 1},
-	// 	Max: image.Point{X: len(str) + 1, Y: LogsHeight() + 2},
-	// }, tui.ColorDefault)
 	if inCommandMode {
 		str = ":" + str
 	}
@@ -160,7 +155,7 @@ func InstallEventHandlers() {
 	))
 	tui.Handle("/sys/kbd/j", handleByMode(
 		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: 1}) },
-		noOp,
+		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: 1}) },
 		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "j"}) },
 	))
 	tui.Handle("/sys/kbd/J", handleByMode(
@@ -170,7 +165,7 @@ func InstallEventHandlers() {
 	))
 	tui.Handle("/sys/kbd/k", handleByMode(
 		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: -1}) },
-		noOp,
+		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: -1}) },
 		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "k"}) },
 	))
 	tui.Handle("/sys/kbd/K", handleByMode(

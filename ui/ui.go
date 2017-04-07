@@ -130,6 +130,8 @@ func handleByMode(normalCallback eventHandler, focusCallback eventHandler, comma
 }
 
 // InstallEventHandlers sets up the handlers for all keyboard events.
+// TODO(colin): refactor so we don't have to say that every key types its value
+// in command mode...
 func InstallEventHandlers() {
 	tui.Handle("/sys/kbd/q", handleByMode(
 		func(_ tui.Event) { shutdown() },
@@ -146,15 +148,35 @@ func InstallEventHandlers() {
 		noOp,
 		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: ":"}) },
 	))
+	tui.Handle("/sys/kbd/g", handleByMode(
+		func(_ tui.Event) { Dispatch(SetCursorAction{x: 0, y: 0}) },
+		noOp,
+		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "g"}) },
+	))
+	tui.Handle("/sys/kbd/G", handleByMode(
+		func(_ tui.Event) { Dispatch(SetCursorAction{x: 0, y: LogsHeight()}) },
+		noOp,
+		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "G"}) },
+	))
 	tui.Handle("/sys/kbd/j", handleByMode(
 		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: 1}) },
 		noOp,
 		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "j"}) },
 	))
+	tui.Handle("/sys/kbd/J", handleByMode(
+		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: 10}) },
+		noOp,
+		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "J"}) },
+	))
 	tui.Handle("/sys/kbd/k", handleByMode(
 		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: -1}) },
 		noOp,
 		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "k"}) },
+	))
+	tui.Handle("/sys/kbd/K", handleByMode(
+		func(_ tui.Event) { Dispatch(MoveCursorAction{x: 0, y: -10}) },
+		noOp,
+		func(_ tui.Event) { Dispatch(AppendToCommandAction{text: "K"}) },
 	))
 	tui.Handle("/sys/kbd/>", handleByMode(
 		func(_ tui.Event) { Dispatch(SetInputModeAction{mode: "focus"}) },
@@ -171,11 +193,15 @@ func InstallEventHandlers() {
 		// This is backspace for me.  Might be different on other systems?
 		Dispatch(BackspaceCommandAction{})
 	})
-	tui.Handle("/sys/kbd/<enter>", commandOnly(func(e tui.Event) {
-		command := GetState().CommandBuffer
-		Dispatch(ClearCommandAction{})
-		Dispatch(ProcessCommandAction{command: command})
-	}))
+	tui.Handle("/sys/kbd/<enter>", handleByMode(
+		func(e tui.Event) { Dispatch(SetInputModeAction{mode: "focus"}) },
+		noOp,
+		func(e tui.Event) {
+			command := GetState().CommandBuffer
+			Dispatch(ClearCommandAction{})
+			Dispatch(ProcessCommandAction{command: command})
+		},
+	))
 	tui.Handle("/sys/kbd", commandOnly(func(e tui.Event) {
 		if evtKbd, ok := e.Data.(tui.EvtKbd); ok {
 			Dispatch(AppendToCommandAction{text: evtKbd.KeyStr})

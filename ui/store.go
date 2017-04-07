@@ -77,6 +77,22 @@ func processCommand(command string) {
 	}
 }
 
+func ensureCursorInBounds(pos Position) Position {
+	if pos.x < 0 {
+		pos.x = 0
+	}
+	if pos.y < 0 {
+		pos.y = 0
+	}
+	if pos.x >= LogsWidth() {
+		pos.x = LogsWidth() - 1
+	}
+	if pos.y >= LogsHeight() {
+		pos.y = LogsHeight() - 1
+	}
+	return pos
+}
+
 func handleAction(action interface{}) bool {
 	switch a := action.(type) {
 	case ShutdownAction:
@@ -111,19 +127,10 @@ func handleAction(action interface{}) bool {
 			x: _state.Cursor.x + a.x,
 			y: _state.Cursor.y + a.y,
 		}
-		if nextPos.x < 0 {
-			nextPos.x = 0
-		}
-		if nextPos.y < 0 {
-			nextPos.y = 0
-		}
-		if nextPos.x >= LogsWidth() {
-			nextPos.x = LogsWidth() - 1
-		}
-		if nextPos.y >= LogsHeight() {
-			nextPos.y = LogsHeight() - 1
-		}
-		_state.Cursor = nextPos
+		_state.Cursor = ensureCursorInBounds(nextPos)
+		_state.LogsUpdatedAt = time.Now().UTC()
+	case SetCursorAction:
+		_state.Cursor = ensureCursorInBounds(Position{x: a.x, y: a.y})
 		_state.LogsUpdatedAt = time.Now().UTC()
 	case SetErrorAction:
 		_state.Flash = a.message

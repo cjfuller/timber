@@ -13,6 +13,11 @@ type MoveCursorAction struct {
 	y int
 }
 
+type SetCursorAction struct {
+	x int
+	y int
+}
+
 type LoadingAction struct{}
 
 type RenderAction struct{}
